@@ -1,0 +1,15 @@
+[
+  {
+    "Name": "name",
+    "Value": "Jan"
+  },
+  {
+    "Name": "family_name",
+    "Value": "Reimann"
+  },
+  {
+    "Name": "preferred_username",
+    "Value": "testcompany"
+  }
+  
+]

@@ -1,0 +1,31 @@
+{
+    "args": {
+        "entityId": "contact_a70b8577-cc1e-4f18-81e7-b295f055037f",
+        "ownerUserId": "18b560d3-b524-4e11-a5cc-9aa46dc31350"
+    },
+    "identity": {
+        "sub": "18b560d3-b524-4e11-a5cc-9aa46dc31350",
+        "issuer": "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_Vuh0J2ik9",
+        "username": "b81eff70-e558-4a0e-bed7-1ce28507e8fd",
+        "claims": {
+            "sub": "18b560d3-b524-4e11-a5cc-9aa46dc31350",
+            "iss": "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_Vuh0J2ik9",
+            "cognito:username": "18b560d3-b524-4e11-a5cc-9aa46dc31350",
+            "preferred_username": "testcompany",
+            "aud": "vagd8sae0kg9sm8l829trej5i",
+            "event_id": "cac1bff3-8516-11e8-a09e-fb9c75a93b8d",
+            "token_use": "id",
+            "auth_time": 1531319357,
+            "name": "Dimitri",
+            "exp": 1531322957,
+            "iat": 1531319357,
+            "family_name": "Tarasowski",
+            "email": "dimitri+test@tarasowski.de"
+        },
+        "sourceIp": [
+            "37.221.177.4"
+        ],
+        "defaultAuthStrategy": "ALLOW",
+        "groups": null
+    }
+}

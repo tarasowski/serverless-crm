@@ -1,0 +1,35 @@
+{
+    "args": {
+        "input": {
+            "entity": "deal",
+            "dealName": "Call John Doe",
+            "dealValue": "1000",
+            "assignToEntityId": "company_5b5e7ea6-9118-4ee7-8b0a-5cd4d18b762b"
+        }
+    },
+    "identity": {
+        "sub": "b81eff70-e558-4a0e-bed7-1ce28507e8fd",
+        "issuer": "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_Vuh0J2ik9",
+        "username": "b81eff70-e558-4a0e-bed7-1ce28507e8fd",
+        "claims": {
+            "sub": "b81eff70-e558-4a0e-bed7-1ce28507e8fd",
+            "iss": "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_Vuh0J2ik9",
+            "cognito:username": "b81eff70-e558-4a0e-bed7-1ce28507e8fd",
+            "preferred_username": "cac689b4-079b-48ff-bd8d-a45b61da291a",
+            "aud": "vagd8sae0kg9sm8l829trej5i",
+            "event_id": "cac1bff3-8516-11e8-a09e-fb9c75a93b8d",
+            "token_use": "id",
+            "auth_time": 1531319357,
+            "name": "Jan",
+            "exp": 1531322957,
+            "iat": 1531319357,
+            "family_name": "Reimann",
+            "email": "dimitri+jan@tarasowski.de"
+        },
+        "sourceIp": [
+            "37.221.177.4"
+        ],
+        "defaultAuthStrategy": "ALLOW",
+        "groups": null
+    }
+}

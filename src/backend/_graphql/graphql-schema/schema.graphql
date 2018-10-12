@@ -1,0 +1,209 @@
+type Mutation {
+	saveContact(input: contactAttributes!): String
+		@aws_auth(cognito_groups: ["hasFullAccess","canEditEverything","canEditOwnerOnly"])
+	saveCompany(input: companyAttributes!): String
+		@aws_auth(cognito_groups: ["hasFullAccess","canEditEverything","canEditOwnerOnly"])
+	saveDeal(input: dealAttributes!): String
+		@aws_auth(cognito_groups: ["hasFullAccess","canEditEverything","canEditOwnerOnly"])
+	saveDealFromEntity(input: dealAttributes!): String
+		@aws_auth(cognito_groups: ["hasFullAccess","canEditEverything","canEditOwnerOnly"])
+	# This is when you create a deal and assign it to a contact or company
+	saveActivity(input: activityAttributes!): String
+		@aws_auth(cognito_groups: ["hasFullAccess","canEditEverything","canEditOwnerOnly"])
+	saveActivityFromEntity(input: activityAttributes!): String
+		@aws_auth(cognito_groups: ["hasFullAccess","canEditEverything","canEditOwnerOnly"])
+	# This is when you save an activity from contact or company or deal 
+	assignOwnerToEntity(entityId: String!, ownerUserId: String!): String
+		@aws_auth(cognito_groups: ["hasFullAccess","canEditEverything","canEditOwnerOnly"])
+	assignCompanyToEntity(entityId: String!, companyEntityId: String!): String
+		@aws_auth(cognito_groups: ["hasFullAccess","canEditEverything","canEditOwnerOnly"])
+	assignContactToEntity(entityId: String!, contactEntityId: String!): String
+		@aws_auth(cognito_groups: ["hasFullAccess","canEditEverything","canEditOwnerOnly"])
+	assignDealToEntity(entityId: String!, dealEntityId: String!): String
+		@aws_auth(cognito_groups: ["hasFullAccess","canEditEverything","canEditOwnerOnly"])
+	assignActivityToEntity(entityId: String!, activityEntityId: String!): String
+		@aws_auth(cognito_groups: ["hasFullAccess","canEditEverything","canEditOwnerOnly"])
+	inviteUser(userEmail: String!, input: RBACList!): String
+		@aws_auth(cognito_groups: ["hasFullAccess","canInvite"])
+}
+
+type Query {
+	getContacts(entity: entityEnum!): [allContacts]
+		@aws_auth(cognito_groups: ["hasFullAccess","canViewEverything","canViewOwnerOnly"])
+	getCompanies(entity: entityEnum!): [allCompanies]
+		@aws_auth(cognito_groups: ["hasFullAccess","canViewEverything","canViewOwnerOnly"])
+	getDeals(entity: entityEnum!): [allDeals]
+		@aws_auth(cognito_groups: ["hasFullAccess","canViewEverything","canViewOwnerOnly"])
+	getActivities(entity: entityEnum!): [allActivities]
+		@aws_auth(cognito_groups: ["hasFullAccess","canViewEverything","canViewOwnerOnly"])
+	getCognitoUserList: [ownerList]
+		@aws_auth(cognito_groups: ["hasFullAccess","canViewEverything","canViewOwnerOnly"])
+}
+
+input RBACList {
+	canViewEverything: accessEnum!
+	canViewOwnerOnly: accessEnum!
+	canEditEverything: accessEnum!
+	canEditOwnerOnly: accessEnum!
+	canImport: accessEnum!
+	canExport: accessEnum!
+	canInvite: accessEnum!
+	hasFullAccess: accessEnum!
+}
+
+enum accessEnum {
+	yes
+	no
+}
+
+input activityAttributes {
+	activityType: activityTypeEnum!
+	entity: entityEnum!
+	activityName: String!
+	assignToEntityId: String
+}
+
+type activityDetails {
+	userId: String
+	entityId: String
+	companyId: String
+	activityType: String
+	name: String
+	createDate: String
+	entity: String!
+}
+
+enum activityTypeEnum {
+	email
+	call
+	todo
+	meeting
+}
+
+type allActivities {
+	userId: String
+	entityId: String
+	entity: String!
+	activityType: String
+	name: String
+	createDate: String
+	assignedToEntityId: String
+}
+
+type allCompanies {
+	userId: String
+	entityId: String
+	companyId: String
+	name: String
+	email: String
+	createDate: String
+	entity: String!
+	assignedActivities: allActivities
+}
+
+type allCompanyContacts {
+	companyId: String
+	entity: String
+	userId: String
+	entityId: String
+	name: String
+	email: String
+	createDate: String
+	ownerId: String
+	ownerDetails: ownerDetails
+}
+
+type allContacts {
+	userId: String!
+	entityId: String!
+	companyId: String!
+	name: String
+	email: String
+	createDate: String
+	entity: String!
+	ownerId: String
+	ownerDetails: ownerDetails
+	dealId: [String]
+	dealDetails: [dealDetails]
+	activityId: [String]
+	activityDetails: [activityDetails]
+	associatedCompanyId: String
+	associatedCompanyDetails: companyDetails
+}
+
+type allDeals {
+	userId: String
+	entityId: String
+	companyId: String
+	name: String
+	value: Int
+	createDate: String
+	entity: String!
+}
+
+input companyAttributes {
+	entity: entityEnum!
+	companyName: String!
+	companyEmail: String
+}
+
+type companyDetails {
+	name: String
+	email: String
+	entity: String
+	entityId: String
+	userId: String
+	companyId: String
+	createDate: String
+}
+
+input contactAttributes {
+	entity: entityEnum!
+	contactName: String!
+	contactEmail: String
+}
+
+input dealAttributes {
+	entity: entityEnum!
+	dealName: String!
+	dealValue: Int
+	assignToEntityId: String
+}
+
+type dealDetails {
+	entity: String
+	value: Int
+	createDate: String
+	userId: String
+	companyId: String
+	name: String
+	entityId: String
+}
+
+enum entityEnum {
+	contact
+	company
+	deal
+	activity
+}
+
+type ownerDetails {
+	firstName: String
+	lastName: String
+	userId: String
+	companyId: String
+	email: String
+}
+
+type ownerList {
+	userId: String!
+	companyId: String!
+	firstName: String
+	lastName: String
+	email: String!
+}
+
+schema {
+	query: Query
+	mutation: Mutation
+}

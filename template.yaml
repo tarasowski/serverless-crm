@@ -1,0 +1,740 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+Description: Claudia CRM infrastrucuture as code - GraphQL Backend
+
+Parameters:
+    APIName:
+        Type: String
+        Description: This is the API name
+        MinLength: 3
+        MaxLength: 20
+        Default: claudiacrm
+        AllowedPattern: "^[a-zA-Z][a-zA-Z0-9_]*$"
+        ConstraintDescription: The name should have min. 3 and max. 20 letters
+    APIStage:
+        Type: String
+        Description: This is the API stage
+        MinLength: 3
+        MaxLength: 10
+        Default: dev
+        AllowedPattern: "^[a-zA-Z][a-zA-Z0-9_]*$"
+        AllowedValues:
+            -   prod
+            -   test
+            -   dev
+        ConstraintDescription: Must be one of the following values - prod, test or dev
+    graphQLBucketName:
+        Type: String
+        Description: This is the s3 url to the bucket with GraphQL Schema specs
+        MinLength: 3
+        MaxLength: 50
+        Default: com.claudiacrm-dev-graphql-specs
+        AllowedPattern: "^[a-z0-9_.-]*$"
+        ConstraintDescription: You need to create the bucket first, add schema and mapping templates
+
+Globals:
+    Function:
+        Runtime: nodejs8.10
+        Timeout: 5
+        MemorySize: 128
+        Environment:
+            Variables:
+                TABLE_NAME: !Ref claudiaCrmMainDB
+                USER_POOL_ID: !Ref claudiaCrmUserPool
+                
+Resources:
+   
+    claudiaCrmMainDB:
+        Type: AWS::DynamoDB::Table
+        Description: The main table for contacts, companies, deals and activities
+        Properties:
+            TableName: !Sub ${APIName}-${APIStage}
+            AttributeDefinitions:
+                -   AttributeName: userId
+                    AttributeType: S
+                -   AttributeName: entityId
+                    AttributeType: S
+            KeySchema:
+                -   AttributeName: userId
+                    KeyType: HASH
+                -   AttributeName: entityId
+                    KeyType: RANGE
+            ProvisionedThroughput:
+                ReadCapacityUnits: 1
+                WriteCapacityUnits: 1
+             
+    saveContact:
+        Type: AWS::Serverless::Function
+        Properties:
+            Handler: src/backend/contacts/save-contact.handler
+            Description: Lambda function that handles the saving of a contact
+            FunctionName: !Sub ${APIName}-${APIStage}-saveContact
+            Policies:
+                -   Version: 2012-10-17
+                    Statement: 
+                        -   Effect: Allow
+                            Action: 
+                                -   dynamodb:putItem
+                            Resource: !GetAtt claudiaCrmMainDB.Arn
+    getContacts:
+        Type: AWS::Serverless::Function
+        Properties:
+            Handler: src/backend/contacts/get-contacts.handler
+            Description: Lambda function that returns all contacts
+            FunctionName: !Sub ${APIName}-${APIStage}-getContacts
+            Policies:
+                -   Version: 2012-10-17
+                    Statement: 
+                        -   Effect: Allow
+                            Action: 
+                                -   dynamodb:Query
+                            Resource: !GetAtt claudiaCrmMainDB.Arn
+    assignContactToEntity:
+        Type: AWS::Serverless::Function
+        Properties:
+            Handler: src/backend/contacts/assign-contact-to-entity.handler
+            Description: Lambda function that assigns contact to an entity
+            FunctionName: !Sub ${APIName}-${APIStage}-assignContactToEntity
+            Policies:
+                -   Version: 2012-10-17
+                    Statement: 
+                        -   Effect: Allow
+                            Action: 
+                                -   dynamodb:putItem
+                                -   dynamodb:Query
+                                -   dynamodb:updateItem
+                            Resource: !GetAtt claudiaCrmMainDB.Arn
+    saveCompany:
+        Type: AWS::Serverless::Function
+        Properties:
+            Handler: src/backend/companies/save-company.handler
+            Description: Lambda function that handles the saving of a company
+            FunctionName: !Sub ${APIName}-${APIStage}-saveCompany
+            Policies:
+                -   Version: 2012-10-17
+                    Statement: 
+                        -   Effect: Allow
+                            Action: 
+                                -   dynamodb:putItem
+                            Resource: !GetAtt claudiaCrmMainDB.Arn
+    getCompanies:
+        Type: AWS::Serverless::Function
+        Properties:
+            Handler: src/backend/companies/get-companies.handler
+            Description: Lambda function that returns all companies
+            FunctionName: !Sub ${APIName}-${APIStage}-getCompanies
+            Policies:
+                -   Version: 2012-10-17
+                    Statement: 
+                        -   Effect: Allow
+                            Action: 
+                                -   dynamodb:Query
+                            Resource: !GetAtt claudiaCrmMainDB.Arn
+    assignCompanyToEntity:
+        Type: AWS::Serverless::Function
+        Properties:
+            Handler: src/backend/companies/assign-company-to-entity.handler
+            Description: Lambda function that assigns company to an entity
+            FunctionName: !Sub ${APIName}-${APIStage}-assignCompanyToEntity
+            Policies:
+                -   Version: 2012-10-17
+                    Statement: 
+                        -   Effect: Allow
+                            Action: 
+                                -   dynamodb:putItem
+                                -   dynamodb:Query
+                                -   dynamodb:updateItem
+                            Resource: !GetAtt claudiaCrmMainDB.Arn
+    saveDeal:
+        Type: AWS::Serverless::Function
+        Properties:
+            Handler: src/backend/deals/save-deal.handler
+            Description: Lambda function that handles the saving of a deal
+            FunctionName: !Sub ${APIName}-${APIStage}-saveDeal
+            Policies:
+                -   Version: 2012-10-17
+                    Statement: 
+                        -   Effect: Allow
+                            Action: 
+                                -   dynamodb:putItem
+                            Resource: !GetAtt claudiaCrmMainDB.Arn
+    getDeals:
+        Type: AWS::Serverless::Function
+        Properties:
+            Handler: src/backend/deals/get-deals.handler
+            Description: Lambda function that returns all deals
+            FunctionName: !Sub ${APIName}-${APIStage}-getDeals
+            Policies:
+                -   Version: 2012-10-17
+                    Statement: 
+                        -   Effect: Allow
+                            Action: 
+                                -   dynamodb:Query
+                            Resource: !GetAtt claudiaCrmMainDB.Arn
+    assignDealToEntity:
+        Type: AWS::Serverless::Function
+        Properties:
+            Handler: src/backend/deals/assign-deal-to-entity.handler
+            Description: Lambda function that assigns deal to an entity
+            FunctionName: !Sub ${APIName}-${APIStage}-assignDealToEntity
+            Policies:
+                -   Version: 2012-10-17
+                    Statement: 
+                        -   Effect: Allow
+                            Action: 
+                                -   dynamodb:putItem
+                                -   dynamodb:Query
+                                -   dynamodb:updateItem
+                            Resource: !GetAtt claudiaCrmMainDB.Arn
+    saveActivity:
+        Type: AWS::Serverless::Function
+        Properties:
+            Handler: src/backend/activities/save-activity.handler
+            Description: Lambda function that handles the saving of an activity
+            FunctionName: !Sub ${APIName}-${APIStage}-saveActivity
+            Policies:
+                -   Version: 2012-10-17
+                    Statement: 
+                        -   Effect: Allow
+                            Action: 
+                                -   dynamodb:putItem
+                            Resource: !GetAtt claudiaCrmMainDB.Arn
+    getActivities:
+        Type: AWS::Serverless::Function
+        Properties:
+            Handler: src/backend/activities/get-activities.handler
+            Description: Lambda function that returns all activities
+            FunctionName: !Sub ${APIName}-${APIStage}-getActivities
+            Policies:
+                -   Version: 2012-10-17
+                    Statement: 
+                        -   Effect: Allow
+                            Action: 
+                                -   dynamodb:Query
+                            Resource: !GetAtt claudiaCrmMainDB.Arn
+    assignActivityToEntity:
+        Type: AWS::Serverless::Function
+        Properties:
+            Handler: src/backend/activities/assign-activity-to-entity.handler
+            Description: Lambda function that assigns activity to an entity
+            FunctionName: !Sub ${APIName}-${APIStage}-assignActivityToEntity
+            Policies:
+                -   Version: 2012-10-17
+                    Statement: 
+                        -   Effect: Allow
+                            Action: 
+                                -   dynamodb:putItem
+                                -   dynamodb:Query
+                                -   dynamodb:updateItem
+                            Resource: !GetAtt claudiaCrmMainDB.Arn
+    assignOwnerToEntity:
+        Type: AWS::Serverless::Function
+        Properties:
+            Handler: src/backend/users/assign-owner-to-entity.handler
+            Description: Lambda function that assigns owner to an entity
+            FunctionName: !Sub ${APIName}-${APIStage}-assignOwnerToEntity
+            Policies:
+                -   Version: 2012-10-17
+                    Statement: 
+                        -   Effect: Allow
+                            Action: 
+                                -   dynamodb:putItem
+                                -   dynamodb:Query
+                                -   dynamodb:updateItem
+                            Resource: !GetAtt claudiaCrmMainDB.Arn
+                -   Version: 2012-10-17
+                    Statement: 
+                        -   Effect: Allow
+                            Action: 
+                                -   cognito-idp:ListUsers
+                            Resource: !GetAtt claudiaCrmUserPool.Arn
+    saveActivityFromEntity:
+        Type: AWS::Serverless::Function
+        Properties:
+            Handler: src/backend/activities/save-activity-from-entity.handler
+            Description: > 
+                Lambda function that saves an activity from within an entity e.g. contact or company.
+                Especially you need it when your are inside a contact and want to save some activity.
+                You don't need to switch a view to create an activity to come back to assign one.
+            FunctionName: !Sub ${APIName}-${APIStage}-saveActivityFromEntity
+            Policies:
+                -   Version: 2012-10-17
+                    Statement: 
+                        -   Effect: Allow
+                            Action: 
+                                -   dynamodb:putItem
+                                -   dynamodb:Query
+                                -   dynamodb:updateItem
+                            Resource: !GetAtt claudiaCrmMainDB.Arn
+    saveDealFromEntity:
+        Type: AWS::Serverless::Function
+        Properties:
+            Handler: src/backend/deals/save-deal-from-entity.handler
+            Description: > 
+                Lambda function that saves an deal from within an entity e.g. contact or company.
+                Especially you need it when your are inside a contact and want to save a new deal.
+                You don't need to switch the view to create a deal to come back to assign one.
+            FunctionName: !Sub ${APIName}-${APIStage}-saveDealFromEntity
+            Policies:
+                -   Version: 2012-10-17
+                    Statement: 
+                        -   Effect: Allow
+                            Action: 
+                                -   dynamodb:putItem
+                                -   dynamodb:Query
+                                -   dynamodb:updateItem
+                            Resource: !GetAtt claudiaCrmMainDB.Arn
+    getCognitoUserList:
+        Type: AWS::Serverless::Function
+        Properties:
+            Handler: src/backend/users/get-cognito-user-list.handler
+            Description: Lambda function that returns all cognito users from a specific company
+            FunctionName: !Sub ${APIName}-${APIStage}-getCognitoUserList
+            Policies:
+                -   Version: 2012-10-17
+                    Statement: 
+                        -   Effect: Allow
+                            Action: 
+                                -   cognito-idp:ListUsers
+                            Resource: !GetAtt claudiaCrmUserPool.Arn
+    inviteUser:
+        Type: AWS::Serverless::Function
+        Properties:
+            Handler: src/backend/users/invite-user.handler
+            Description: Lambda function that invites new users and assigns them to the right groups
+            FunctionName: !Sub ${APIName}-${APIStage}-inviteUser
+            Policies:
+                -   Version: 2012-10-17
+                    Statement: 
+                        -   Effect: Allow
+                            Action: 
+                                -   cognito-idp:AdminCreateUser
+                                -   cognito-idp:AdminAddUserToGroup
+                            Resource: !GetAtt claudiaCrmUserPool.Arn
+                            
+                            
+    appSyncInvokeLambdaFunction:
+        Type: AWS::IAM::ManagedPolicy
+        Properties:
+            Description: Managed policy to allow AppSync to invoke Lambda functions
+            Path: /appsync/
+            PolicyDocument:
+                Version: 2012-10-17
+                Statement:
+                    -   Effect: Allow
+                        Action:
+                            -   lambda:InvokeFunction
+                        Resource:
+                            -   !GetAtt saveContact.Arn
+                            -   !GetAtt saveCompany.Arn
+                            -   !GetAtt saveDeal.Arn
+                            -   !GetAtt saveActivity.Arn
+                            -   !GetAtt getCognitoUserList.Arn
+                            -   !GetAtt saveDealFromEntity.Arn
+                            -   !GetAtt saveActivityFromEntity.Arn
+                            -   !GetAtt assignOwnerToEntity.Arn
+                            -   !GetAtt assignActivityToEntity.Arn
+                            -   !GetAtt getActivities.Arn
+                            -   !GetAtt assignDealToEntity.Arn
+                            -   !GetAtt getDeals.Arn
+                            -   !GetAtt assignCompanyToEntity.Arn
+                            -   !GetAtt getCompanies.Arn
+                            -   !GetAtt assignContactToEntity.Arn
+                            -   !GetAtt getContacts.Arn
+                            -   !GetAtt inviteUser.Arn
+    appSyncLambdaRole:
+        Type: AWS::IAM::Role
+        Properties:
+            RoleName: !Sub ${APIName}-${APIStage}-appsync-invoke-lambda
+            ManagedPolicyArns:
+                -   !Ref appSyncInvokeLambdaFunction
+            AssumeRolePolicyDocument:
+                Version: 2012-10-17
+                Statement:
+                    -   Effect: Allow
+                        Action:
+                            -   sts:AssumeRole
+                        Principal:
+                            Service:
+                                -   appsync.amazonaws.com
+        DependsOn:
+            -   appSyncInvokeLambdaFunction
+    
+    claudiaCrmUserPool:
+        Type: AWS::Cognito::UserPool
+        Properties:
+            UserPoolName: !Sub ${APIName}-${APIStage}
+            UsernameAttributes: 
+                -   email
+            UserPoolTags: 
+                Name: Name
+                Value: !Sub ${APIName}-${APIStage}
+            Schema:
+                -   Name: email
+                    Required: true
+                    Mutable: true
+                -   Name: preferred_username
+                    Required: true
+                    Mutable: true
+                -   Name: name
+                    Required: false
+                    Mutable: true
+                -   Name: family_name
+                    Required: false
+                    Mutable: true
+            
+    claudiaCrmPoolClient:
+        Type: AWS::Cognito::UserPoolClient
+        Properties:
+            UserPoolId: !Ref claudiaCrmUserPool
+        
+    claudiaCrmAppSyncApi:
+        Type: AWS::AppSync::GraphQLApi
+        Description: The GraphQL API for Claudia Crm
+        Properties:
+            AuthenticationType: AMAZON_COGNITO_USER_POOLS
+            Name: !Sub ${APIName}-${APIStage}
+            UserPoolConfig:
+                UserPoolId: !Ref claudiaCrmUserPool
+                AwsRegion: !Sub ${AWS::Region}
+                DefaultAction: DENY
+                
+    claudiaCrmAppSyncSchema:
+        Type: AWS::AppSync::GraphQLSchema
+        Properties:
+            ApiId: !GetAtt claudiaCrmAppSyncApi.ApiId
+            DefinitionS3Location: !Join ['',['s3://', !Ref graphQLBucketName, '/schema.graphql'] ]
+            
+            
+    saveContactDataSource:
+        Type: AWS::AppSync::DataSource
+        Properties:
+            ApiId: !GetAtt claudiaCrmAppSyncApi.ApiId
+            Name: !Sub ${APIName}SaveContact
+            Description: Data source for saving a contact to a database
+            Type: AWS_LAMBDA
+            ServiceRoleArn: !GetAtt appSyncLambdaRole.Arn
+            LambdaConfig:
+                LambdaFunctionArn: !GetAtt saveContact.Arn
+    saveCompanyDataSource:
+        Type: AWS::AppSync::DataSource
+        Properties:
+            ApiId: !GetAtt claudiaCrmAppSyncApi.ApiId
+            Name: !Sub ${APIName}SaveCompany
+            Description: Data source for saving a contact to a database
+            Type: AWS_LAMBDA
+            ServiceRoleArn: !GetAtt appSyncLambdaRole.Arn
+            LambdaConfig:
+                LambdaFunctionArn: !GetAtt saveCompany.Arn
+    saveDealDataSource:
+        Type: AWS::AppSync::DataSource
+        Properties:
+            ApiId: !GetAtt claudiaCrmAppSyncApi.ApiId
+            Name: !Sub ${APIName}SaveDeal
+            Description: Data source for saving a contact to a database
+            Type: AWS_LAMBDA
+            ServiceRoleArn: !GetAtt appSyncLambdaRole.Arn
+            LambdaConfig:
+                LambdaFunctionArn: !GetAtt saveDeal.Arn
+    saveActivityDataSource:
+        Type: AWS::AppSync::DataSource
+        Properties:
+            ApiId: !GetAtt claudiaCrmAppSyncApi.ApiId
+            Name: !Sub ${APIName}SaveActivity
+            Description: Data source for saving a contact to a database
+            Type: AWS_LAMBDA
+            ServiceRoleArn: !GetAtt appSyncLambdaRole.Arn
+            LambdaConfig:
+                LambdaFunctionArn: !GetAtt saveActivity.Arn
+    assignContactToEntityDataSource:
+        Type: AWS::AppSync::DataSource
+        Properties:
+            ApiId: !GetAtt claudiaCrmAppSyncApi.ApiId
+            Name: !Sub ${APIName}assignContactToEntity
+            Description: Data source for assigning a contact from an entity view e.g. from contact, deal.
+            Type: AWS_LAMBDA
+            ServiceRoleArn: !GetAtt appSyncLambdaRole.Arn
+            LambdaConfig:
+                LambdaFunctionArn: !GetAtt assignContactToEntity.Arn
+    assignCompanyToEntityDataSource:
+        Type: AWS::AppSync::DataSource
+        Properties:
+            ApiId: !GetAtt claudiaCrmAppSyncApi.ApiId
+            Name: !Sub ${APIName}assignCompanyToEntity
+            Description: Data source for assigning a company from an entity view e.g. from contact, deal.
+            Type: AWS_LAMBDA
+            ServiceRoleArn: !GetAtt appSyncLambdaRole.Arn
+            LambdaConfig:
+                LambdaFunctionArn: !GetAtt assignCompanyToEntity.Arn
+    assignDealToEntityDataSource:
+        Type: AWS::AppSync::DataSource
+        Properties:
+            ApiId: !GetAtt claudiaCrmAppSyncApi.ApiId
+            Name: !Sub ${APIName}assignDealToEntity
+            Description: Data source for assigning a deal from an entity view e.g. from contact, deal.
+            Type: AWS_LAMBDA
+            ServiceRoleArn: !GetAtt appSyncLambdaRole.Arn
+            LambdaConfig:
+                LambdaFunctionArn: !GetAtt assignDealToEntity.Arn
+    assignActivityToEntityDataSource:
+        Type: AWS::AppSync::DataSource
+        Properties:
+            ApiId: !GetAtt claudiaCrmAppSyncApi.ApiId
+            Name: !Sub ${APIName}assignActivityToEntity
+            Description: Data source for assigning an activity from an entity view e.g. from contact, deal.
+            Type: AWS_LAMBDA
+            ServiceRoleArn: !GetAtt appSyncLambdaRole.Arn
+            LambdaConfig:
+                LambdaFunctionArn: !GetAtt assignActivityToEntity.Arn
+    assignOwnerToEntityDataSource:
+        Type: AWS::AppSync::DataSource
+        Properties:
+            ApiId: !GetAtt claudiaCrmAppSyncApi.ApiId
+            Name: !Sub ${APIName}assignOwnerToEntity
+            Description: Data source for assigning owner from an entity view e.g. from contact, deal.
+            Type: AWS_LAMBDA
+            ServiceRoleArn: !GetAtt appSyncLambdaRole.Arn
+            LambdaConfig:
+                LambdaFunctionArn: !GetAtt assignOwnerToEntity.Arn
+    saveActivityFromEntityDataSource:
+        Type: AWS::AppSync::DataSource
+        Properties:
+            ApiId: !GetAtt claudiaCrmAppSyncApi.ApiId
+            Name: !Sub ${APIName}saveActivityFromEntity
+            Description: Data source for saving an activity from an entity view e.g. from contact, deal.
+            Type: AWS_LAMBDA
+            ServiceRoleArn: !GetAtt appSyncLambdaRole.Arn
+            LambdaConfig:
+                LambdaFunctionArn: !GetAtt saveActivityFromEntity.Arn
+    saveDealFromEntityDataSource:
+        Type: AWS::AppSync::DataSource
+        Properties:
+            ApiId: !GetAtt claudiaCrmAppSyncApi.ApiId
+            Name: !Sub ${APIName}saveDealFromEntity
+            Description: Data source for saving a deal from an entity view e.g. from contact, deal.
+            Type: AWS_LAMBDA
+            ServiceRoleArn: !GetAtt appSyncLambdaRole.Arn
+            LambdaConfig:
+                LambdaFunctionArn: !GetAtt saveDealFromEntity.Arn
+    getActivitiesDataSource:
+        Type: AWS::AppSync::DataSource
+        Properties:
+            ApiId: !GetAtt claudiaCrmAppSyncApi.ApiId
+            Name: !Sub ${APIName}getActivities
+            Description: Data source for retrieving activities
+            Type: AWS_LAMBDA
+            ServiceRoleArn: !GetAtt appSyncLambdaRole.Arn
+            LambdaConfig:
+                LambdaFunctionArn: !GetAtt getActivities.Arn
+    getCognitoUserListDataSource:
+        Type: AWS::AppSync::DataSource
+        Properties:
+            ApiId: !GetAtt claudiaCrmAppSyncApi.ApiId
+            Name: !Sub ${APIName}getCognitoUserList
+            Description: Data source for retrieving cognito users from the same company
+            Type: AWS_LAMBDA
+            ServiceRoleArn: !GetAtt appSyncLambdaRole.Arn
+            LambdaConfig:
+                LambdaFunctionArn: !GetAtt getCognitoUserList.Arn
+    getCompaniesDataSource:
+        Type: AWS::AppSync::DataSource
+        Properties:
+            ApiId: !GetAtt claudiaCrmAppSyncApi.ApiId
+            Name: !Sub ${APIName}getCompanies
+            Description: Data source for retrieving companies
+            Type: AWS_LAMBDA
+            ServiceRoleArn: !GetAtt appSyncLambdaRole.Arn
+            LambdaConfig:
+                LambdaFunctionArn: !GetAtt getCompanies.Arn            
+    getContactsDataSource:
+        Type: AWS::AppSync::DataSource
+        Properties:
+            ApiId: !GetAtt claudiaCrmAppSyncApi.ApiId
+            Name: !Sub ${APIName}getContacts
+            Description: Data source for retrieving contacts
+            Type: AWS_LAMBDA
+            ServiceRoleArn: !GetAtt appSyncLambdaRole.Arn
+            LambdaConfig:
+                LambdaFunctionArn: !GetAtt getContacts.Arn            
+    getDealsDataSource:
+        Type: AWS::AppSync::DataSource
+        Properties:
+            ApiId: !GetAtt claudiaCrmAppSyncApi.ApiId
+            Name: !Sub ${APIName}getDeals
+            Description: Data source for retrieving deals
+            Type: AWS_LAMBDA
+            ServiceRoleArn: !GetAtt appSyncLambdaRole.Arn
+            LambdaConfig:
+                LambdaFunctionArn: !GetAtt getDeals.Arn            
+                
+
+    saveContactResolver:
+        Type: AWS::AppSync::Resolver
+        DependsOn: claudiaCrmAppSyncSchema
+        Properties:
+            ApiId: !GetAtt claudiaCrmAppSyncApi.ApiId
+            TypeName: Mutation
+            DataSourceName: !GetAtt saveContactDataSource.Name
+            FieldName: saveContact
+            RequestMappingTemplateS3Location: !Join ['',['s3://', !Ref graphQLBucketName, '/request-mapping-template.txt'] ] 
+            ResponseMappingTemplateS3Location: !Join ['',['s3://', !Ref graphQLBucketName, '/response-mapping-template.txt'] ]
+    saveCompanyResolver:
+        Type: AWS::AppSync::Resolver
+        DependsOn: claudiaCrmAppSyncSchema
+        Properties:
+            ApiId: !GetAtt claudiaCrmAppSyncApi.ApiId
+            TypeName: Mutation
+            DataSourceName: !GetAtt saveCompanyDataSource.Name
+            FieldName: saveCompany
+            RequestMappingTemplateS3Location: !Join ['',['s3://', !Ref graphQLBucketName, '/request-mapping-template.txt'] ] 
+            ResponseMappingTemplateS3Location: !Join ['',['s3://', !Ref graphQLBucketName, '/response-mapping-template.txt'] ]
+    saveDealResolver:
+        Type: AWS::AppSync::Resolver
+        DependsOn: claudiaCrmAppSyncSchema
+        Properties:
+            ApiId: !GetAtt claudiaCrmAppSyncApi.ApiId
+            TypeName: Mutation
+            DataSourceName: !GetAtt saveDealDataSource.Name
+            FieldName: saveDeal
+            RequestMappingTemplateS3Location: !Join ['',['s3://', !Ref graphQLBucketName, '/request-mapping-template.txt'] ] 
+            ResponseMappingTemplateS3Location: !Join ['',['s3://', !Ref graphQLBucketName, '/response-mapping-template.txt'] ]
+    saveActivityResolver:
+        Type: AWS::AppSync::Resolver
+        DependsOn: claudiaCrmAppSyncSchema
+        Properties:
+            ApiId: !GetAtt claudiaCrmAppSyncApi.ApiId
+            TypeName: Mutation
+            DataSourceName: !GetAtt saveActivityDataSource.Name
+            FieldName: saveActivity
+            RequestMappingTemplateS3Location: !Join ['',['s3://', !Ref graphQLBucketName, '/request-mapping-template.txt'] ] 
+            ResponseMappingTemplateS3Location: !Join ['',['s3://', !Ref graphQLBucketName, '/response-mapping-template.txt'] ]
+    assignContactToEntityResolver:
+        Type: AWS::AppSync::Resolver
+        DependsOn: claudiaCrmAppSyncSchema
+        Properties:
+            ApiId: !GetAtt claudiaCrmAppSyncApi.ApiId
+            TypeName: Mutation
+            DataSourceName: !GetAtt assignContactToEntityDataSource.Name
+            FieldName: assignContactToEntity
+            RequestMappingTemplateS3Location: !Join ['',['s3://', !Ref graphQLBucketName, '/request-mapping-template.txt'] ] 
+            ResponseMappingTemplateS3Location: !Join ['',['s3://', !Ref graphQLBucketName, '/response-mapping-template.txt'] ]
+    assignCompanyToEntityResolver:
+        Type: AWS::AppSync::Resolver
+        DependsOn: claudiaCrmAppSyncSchema
+        Properties:
+            ApiId: !GetAtt claudiaCrmAppSyncApi.ApiId
+            TypeName: Mutation
+            DataSourceName: !GetAtt assignCompanyToEntityDataSource.Name
+            FieldName: assignCompanyToEntity
+            RequestMappingTemplateS3Location: !Join ['',['s3://', !Ref graphQLBucketName, '/request-mapping-template.txt'] ] 
+            ResponseMappingTemplateS3Location: !Join ['',['s3://', !Ref graphQLBucketName, '/response-mapping-template.txt'] ]
+    assignDealToEntityResolver:
+        Type: AWS::AppSync::Resolver
+        DependsOn: claudiaCrmAppSyncSchema
+        Properties:
+            ApiId: !GetAtt claudiaCrmAppSyncApi.ApiId
+            TypeName: Mutation
+            DataSourceName: !GetAtt assignDealToEntityDataSource.Name
+            FieldName: assignDealToEntity
+            RequestMappingTemplateS3Location: !Join ['',['s3://', !Ref graphQLBucketName, '/request-mapping-template.txt'] ] 
+            ResponseMappingTemplateS3Location: !Join ['',['s3://', !Ref graphQLBucketName, '/response-mapping-template.txt'] ]
+    assignActivityToEntityResolver:
+        Type: AWS::AppSync::Resolver
+        DependsOn: claudiaCrmAppSyncSchema
+        Properties:
+            ApiId: !GetAtt claudiaCrmAppSyncApi.ApiId
+            TypeName: Mutation
+            DataSourceName: !GetAtt assignActivityToEntityDataSource.Name
+            FieldName: assignActivityToEntity
+            RequestMappingTemplateS3Location: !Join ['',['s3://', !Ref graphQLBucketName, '/request-mapping-template.txt'] ] 
+            ResponseMappingTemplateS3Location: !Join ['',['s3://', !Ref graphQLBucketName, '/response-mapping-template.txt'] ]
+    assignOwnerToEntityResolver:
+        Type: AWS::AppSync::Resolver
+        DependsOn: claudiaCrmAppSyncSchema
+        Properties:
+            ApiId: !GetAtt claudiaCrmAppSyncApi.ApiId
+            TypeName: Mutation
+            DataSourceName: !GetAtt assignOwnerToEntityDataSource.Name
+            FieldName: assignOwnerToEntity
+            RequestMappingTemplateS3Location: !Join ['',['s3://', !Ref graphQLBucketName, '/request-mapping-template.txt'] ] 
+            ResponseMappingTemplateS3Location: !Join ['',['s3://', !Ref graphQLBucketName, '/response-mapping-template.txt'] ]
+    saveActivityFromEntityResolver:
+        Type: AWS::AppSync::Resolver
+        DependsOn: claudiaCrmAppSyncSchema
+        Properties:
+            ApiId: !GetAtt claudiaCrmAppSyncApi.ApiId
+            TypeName: Mutation
+            DataSourceName: !GetAtt saveActivityFromEntityDataSource.Name
+            FieldName: saveActivityFromEntity
+            RequestMappingTemplateS3Location: !Join ['',['s3://', !Ref graphQLBucketName, '/request-mapping-template.txt'] ] 
+            ResponseMappingTemplateS3Location: !Join ['',['s3://', !Ref graphQLBucketName, '/response-mapping-template.txt'] ]
+    saveDealFromEntityResolver:
+        Type: AWS::AppSync::Resolver
+        DependsOn: claudiaCrmAppSyncSchema
+        Properties:
+            ApiId: !GetAtt claudiaCrmAppSyncApi.ApiId
+            TypeName: Mutation
+            DataSourceName: !GetAtt saveDealFromEntityDataSource.Name
+            FieldName: saveDealFromEntity
+            RequestMappingTemplateS3Location: !Join ['',['s3://', !Ref graphQLBucketName, '/request-mapping-template.txt'] ] 
+            ResponseMappingTemplateS3Location: !Join ['',['s3://', !Ref graphQLBucketName, '/response-mapping-template.txt'] ]
+    getActivitiesResolver:
+        Type: AWS::AppSync::Resolver
+        DependsOn: claudiaCrmAppSyncSchema
+        Properties:
+            ApiId: !GetAtt claudiaCrmAppSyncApi.ApiId
+            TypeName: Query
+            DataSourceName: !GetAtt getActivitiesDataSource.Name
+            FieldName: getActivities
+            RequestMappingTemplateS3Location: !Join ['',['s3://', !Ref graphQLBucketName, '/request-mapping-template.txt'] ] 
+            ResponseMappingTemplateS3Location: !Join ['',['s3://', !Ref graphQLBucketName, '/response-mapping-template.txt'] ]
+    getCognitoUserListResolver:
+        Type: AWS::AppSync::Resolver
+        DependsOn: claudiaCrmAppSyncSchema
+        Properties:
+            ApiId: !GetAtt claudiaCrmAppSyncApi.ApiId
+            TypeName: Query
+            DataSourceName: !GetAtt getCognitoUserListDataSource.Name
+            FieldName: getCognitoUserList
+            RequestMappingTemplateS3Location: !Join ['',['s3://', !Ref graphQLBucketName, '/request-mapping-template.txt'] ] 
+            ResponseMappingTemplateS3Location: !Join ['',['s3://', !Ref graphQLBucketName, '/response-mapping-template.txt'] ]
+    getCompaniesResolver:
+        Type: AWS::AppSync::Resolver
+        DependsOn: claudiaCrmAppSyncSchema
+        Properties:
+            ApiId: !GetAtt claudiaCrmAppSyncApi.ApiId
+            TypeName: Query
+            DataSourceName: !GetAtt getCompaniesDataSource.Name
+            FieldName: getCompanies
+            RequestMappingTemplateS3Location: !Join ['',['s3://', !Ref graphQLBucketName, '/request-mapping-template.txt'] ] 
+            ResponseMappingTemplateS3Location: !Join ['',['s3://', !Ref graphQLBucketName, '/response-mapping-template.txt'] ]
+    getContactsResolver:
+        Type: AWS::AppSync::Resolver
+        DependsOn: claudiaCrmAppSyncSchema
+        Properties:
+            ApiId: !GetAtt claudiaCrmAppSyncApi.ApiId
+            TypeName: Query
+            DataSourceName: !GetAtt getContactsDataSource.Name
+            FieldName: getContacts
+            RequestMappingTemplateS3Location: !Join ['',['s3://', !Ref graphQLBucketName, '/request-mapping-template.txt'] ] 
+            ResponseMappingTemplateS3Location: !Join ['',['s3://', !Ref graphQLBucketName, '/response-mapping-template.txt'] ]
+    getDealsResolver:
+        Type: AWS::AppSync::Resolver
+        DependsOn: claudiaCrmAppSyncSchema
+        Properties:
+            ApiId: !GetAtt claudiaCrmAppSyncApi.ApiId
+            TypeName: Query
+            DataSourceName: !GetAtt getDealsDataSource.Name
+            FieldName: getDeals
+            RequestMappingTemplateS3Location: !Join ['',['s3://', !Ref graphQLBucketName, '/request-mapping-template.txt'] ] 
+            ResponseMappingTemplateS3Location: !Join ['',['s3://', !Ref graphQLBucketName, '/response-mapping-template.txt'] ]
+    
+            
+Outputs:
+    AppSyncGraphQLApiEndpoint:
+        Description: Here is your GraphQL endpoint URL
+        Value: !GetAtt claudiaCrmAppSyncApi.GraphQLUrl
+    AppSyncGraphQLArn:
+        Description: Here is your GraphQL Arn
+        Value: !GetAtt claudiaCrmAppSyncApi.Arn
+  

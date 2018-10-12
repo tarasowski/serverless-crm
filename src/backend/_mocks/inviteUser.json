@@ -1,0 +1,47 @@
+{
+    "args": {
+        "userEmail": "dimitri+invite@tarasowski.de",
+        "input": {
+            "canViewEverything": "no",
+            "canViewOwnerOnly": "no",
+            "canEditEverything": "no",
+            "canEditOwnerOnly": "no",
+            "canImport": "no",
+            "canExport": "yes",
+            "canInvite": "yes",
+            "hasFullAccess": "yes"
+        }
+    },
+    "identity": {
+        "sub": "18b560d3-b524-4e11-a5cc-9aa46dc31350",
+        "issuer": "https://cognito-idp.eu-west-1.amazonaws.com/eu-west-1_Ez3lS4Q8O",
+        "username": "18b560d3-b524-4e11-a5cc-9aa46dc31350",
+        "claims": {
+            "sub": "18b560d3-b524-4e11-a5cc-9aa46dc31350",
+            "cognito:groups": [
+                "canInvite",
+                "hasFullAccess"
+            ],
+            "iss": "https://cognito-idp.eu-west-1.amazonaws.com/eu-west-1_Ez3lS4Q8O",
+            "cognito:username": "18b560d3-b524-4e11-a5cc-9aa46dc31350",
+            "preferred_username": "testcompany",
+            "aud": "4ovlg9o3ahg7703d2aadgfojlg",
+            "event_id": "e70500f4-8b41-11e8-bf46-99a54d69a556",
+            "token_use": "id",
+            "auth_time": 1531997580,
+            "name": "Dimitri",
+            "exp": 1532001180,
+            "iat": 1531997580,
+            "family_name": "Tarasowski",
+            "email": "dimitri+test@tarasowski.de"
+        },
+        "sourceIp": [
+            "37.221.177.4"
+        ],
+        "defaultAuthStrategy": "DENY",
+        "groups": [
+            "canInvite",
+            "hasFullAccess"
+        ]
+    }
+}

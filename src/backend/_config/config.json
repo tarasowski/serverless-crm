@@ -1,0 +1,4 @@
+{
+    "cognitoUserPoolId": "eu-west-1_Ez3lS4Q8O",
+    "dynamodbTableName": "claudiacrm-dev"
+}

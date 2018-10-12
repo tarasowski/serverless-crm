@@ -1,0 +1,25 @@
+{
+  "name": "claudiacrm",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "No testing yet",
+    "folder": "rm -rf build && mkdir build",
+    "bucket": "aws s3 mb s3://com.claudiacrm-deployment-bucket-dev-new --region eu-west-1",
+    "schema-update": "aws s3 cp ./src/backend/_graphql/graphql-schema/schema.graphql s3://com.claudiacrm-dev-graphql-specs",
+    "package": "aws cloudformation package --template-file template.yaml --output-template-file build/output.yaml --s3-bucket com.claudiacrm-deployment-bucket-dev-new",
+    "deploy": "aws cloudformation deploy --template-file build/output.yaml --stack-name claudia-crm-dev --capabilities CAPABILITY_NAMED_IAM",
+    "qd": "npm run schema-update && npm run folder && npm run package && npm run deploy"
+  },
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "uuid": "^3.3.2"
+  }
+}
